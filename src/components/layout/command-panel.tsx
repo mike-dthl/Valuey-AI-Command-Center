@@ -1,11 +1,13 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import { useUIStore } from "@/stores/ui-store";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 import {
   PanelRightClose,
   Plus,
@@ -15,44 +17,62 @@ import {
   Info,
   Clock,
 } from "lucide-react";
-
-// Placeholder events for the initial layout
-const placeholderEvents = [
-  {
-    id: "1",
-    type: "deal_closed",
-    title: "Neuer Deal abgeschlossen",
-    description: "Acme Corp — Website Redesign",
-    priority: "urgent" as const,
-    time: "vor 5 Min.",
-  },
-  {
-    id: "2",
-    type: "bug_report",
-    title: "Bug gemeldet",
-    description: "Login-Seite lädt nicht",
-    priority: "high" as const,
-    time: "vor 15 Min.",
-  },
-  {
-    id: "3",
-    type: "content_published",
-    title: "Content veröffentlicht",
-    description: "LinkedIn Post: AI Trends 2026",
-    priority: "normal" as const,
-    time: "vor 1 Std.",
-  },
-];
+import type { BlackboardEvent } from "@/types/database";
 
 const priorityConfig = {
   urgent: { icon: AlertCircle, color: "text-red-400", bg: "bg-red-500/10" },
   high: { icon: AlertTriangle, color: "text-amber-400", bg: "bg-amber-500/10" },
   normal: { icon: Info, color: "text-blue-400", bg: "bg-blue-500/10" },
   low: { icon: Clock, color: "text-zinc-400", bg: "bg-zinc-500/10" },
-};
+} as const;
+
+function getTimeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return "gerade eben";
+  if (minutes < 60) return `vor ${minutes} Min.`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `vor ${hours} Std.`;
+  const days = Math.floor(hours / 24);
+  return `vor ${days} Tag${days > 1 ? "en" : ""}`;
+}
 
 export function CommandPanel() {
   const { commandPanelOpen, toggleCommandPanel } = useUIStore();
+  const [events, setEvents] = useState<BlackboardEvent[]>([]);
+
+  const fetchEvents = useCallback(async () => {
+    try {
+      const res = await fetch("/api/blackboard?limit=10");
+      if (res.ok) {
+        const data = await res.json();
+        setEvents(data);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
+
+  // Realtime updates
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel("command-panel-events")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "blackboard_events" },
+        () => fetchEvents()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchEvents]);
 
   if (!commandPanelOpen) return null;
 
@@ -72,44 +92,54 @@ export function CommandPanel() {
       {/* Events */}
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-3">
-          {placeholderEvents.map((event) => {
-            const config = priorityConfig[event.priority];
-            const Icon = config.icon;
-            return (
-              <div
-                key={event.id}
-                className={cn(
-                  "rounded-lg border border-border p-3 transition-colors hover:bg-accent/50",
-                  config.bg
-                )}
-              >
-                <div className="flex items-start gap-2">
-                  <Icon className={cn("mt-0.5 h-4 w-4 shrink-0", config.color)} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium leading-tight">{event.title}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground truncate">
-                      {event.description}
-                    </p>
-                    <div className="mt-2 flex items-center gap-2">
-                      <Badge
-                        variant={
-                          event.priority === "urgent"
-                            ? "destructive"
-                            : event.priority === "high"
-                            ? "warning"
-                            : "info"
-                        }
-                        className="text-[10px]"
-                      >
-                        {event.priority.toUpperCase()}
-                      </Badge>
-                      <span className="text-[10px] text-muted-foreground">{event.time}</span>
+          {events.length === 0 ? (
+            <p className="py-4 text-center text-xs text-muted-foreground">
+              Keine Events
+            </p>
+          ) : (
+            events.map((event) => {
+              const config = priorityConfig[event.priority];
+              const Icon = config.icon;
+              return (
+                <div
+                  key={event.id}
+                  className={cn(
+                    "rounded-lg border border-border p-3 transition-colors hover:bg-accent/50",
+                    config.bg
+                  )}
+                >
+                  <div className="flex items-start gap-2">
+                    <Icon className={cn("mt-0.5 h-4 w-4 shrink-0", config.color)} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium leading-tight">{event.title}</p>
+                      {event.payload && "description" in event.payload && event.payload.description ? (
+                        <p className="mt-0.5 text-xs text-muted-foreground truncate">
+                          {String(event.payload.description)}
+                        </p>
+                      ) : null}
+                      <div className="mt-2 flex items-center gap-2">
+                        <Badge
+                          variant={
+                            event.priority === "urgent"
+                              ? "destructive"
+                              : event.priority === "high"
+                              ? "warning"
+                              : "info"
+                          }
+                          className="text-[10px]"
+                        >
+                          {event.priority.toUpperCase()}
+                        </Badge>
+                        <span className="text-[10px] text-muted-foreground">
+                          {getTimeAgo(event.created_at)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </ScrollArea>
 
