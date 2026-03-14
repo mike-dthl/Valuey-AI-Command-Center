@@ -182,6 +182,32 @@ export interface Workflow {
   updated_at: string;
 }
 
+export interface RevenueEntry {
+  id: string;
+  client_id: string | null;
+  project_id: string | null;
+  amount: number;
+  description: string | null;
+  date: string;
+  type: "income" | "expense";
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface ObsidianConfig {
+  id: string;
+  vault_path: string;
+  sync_enabled: boolean;
+  auto_sync_clients: boolean;
+  auto_sync_projects: boolean;
+  auto_sync_agent_outputs: boolean;
+  auto_sync_blackboard: boolean;
+  auto_daily_summary: boolean;
+  knowledge_path: string;
+  created_by: string | null;
+  updated_at: string;
+}
+
 export interface WorkflowRun {
   id: string;
   workflow_id: string;

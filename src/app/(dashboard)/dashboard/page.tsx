@@ -52,13 +52,14 @@ export default function DashboardPage() {
     }
   }, [teams]);
 
-  // Fetch client and project counts
+  // Fetch client, project, and revenue counts
   useEffect(() => {
     async function fetchCounts() {
       try {
-        const [clientsRes, projectsRes] = await Promise.all([
+        const [clientsRes, projectsRes, revenueRes] = await Promise.all([
           fetch("/api/clients?status=active"),
           fetch("/api/projects"),
+          fetch("/api/analytics/revenue?months=1"),
         ]);
         if (clientsRes.ok) {
           const clients = await clientsRes.json();
@@ -78,6 +79,14 @@ export default function DashboardPage() {
             ...prev,
             activeProjects: active.length,
             tasksCompleted: completed,
+          }));
+        }
+        if (revenueRes.ok) {
+          const revenue = await revenueRes.json();
+          setKpis((prev) => ({
+            ...prev,
+            revenue: revenue.totals?.totalIncome ?? 0,
+            apiCosts: revenue.totals?.totalExpense ?? 0,
           }));
         }
       } catch {
