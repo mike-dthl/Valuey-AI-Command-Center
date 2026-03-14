@@ -15,6 +15,14 @@ interface UsageChartProps {
 }
 
 export function UsageChart({ data }: UsageChartProps) {
+  if (data.length === 0) {
+    return (
+      <div className="flex h-[280px] items-center justify-center text-sm text-muted-foreground">
+        Keine Nutzungsdaten vorhanden
+      </div>
+    );
+  }
+
   return (
     <ResponsiveContainer width="100%" height={280}>
       <BarChart

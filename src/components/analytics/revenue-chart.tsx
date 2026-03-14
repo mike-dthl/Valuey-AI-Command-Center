@@ -26,6 +26,14 @@ function formatMonth(month: string) {
 }
 
 export function RevenueChart({ data }: RevenueChartProps) {
+  if (data.length === 0) {
+    return (
+      <div className="flex h-[280px] items-center justify-center text-sm text-muted-foreground">
+        Keine Umsatzdaten vorhanden
+      </div>
+    );
+  }
+
   const chartData = data.map((d) => ({
     ...d,
     label: formatMonth(d.month),

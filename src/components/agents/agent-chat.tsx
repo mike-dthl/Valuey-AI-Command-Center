@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Send, Square, Bot, User, Loader2 } from "lucide-react";
+import { ChatMessage } from "./chat-message";
 
 interface AgentChatProps {
   agentId: string;
@@ -81,7 +82,11 @@ export function AgentChat({ agentId, agentName }: AgentChatProps) {
                       : "bg-muted"
                   )}
                 >
-                  <div className="whitespace-pre-wrap">{msg.content}</div>
+                  {msg.role === "assistant" ? (
+                    <ChatMessage content={msg.content} />
+                  ) : (
+                    <div className="whitespace-pre-wrap">{msg.content}</div>
+                  )}
                   {msg.isStreaming && (
                     <Loader2 className="mt-1 h-3 w-3 animate-spin text-muted-foreground" />
                   )}

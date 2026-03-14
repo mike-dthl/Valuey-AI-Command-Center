@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { WorkflowCard } from "@/components/workflows/workflow-card";
 import { WorkflowDialog } from "@/components/workflows/workflow-dialog";
 import { useWorkflows } from "@/hooks/use-workflows";
+import { toast } from "sonner";
 import type { Workflow } from "@/types/database";
 
 export default function WorkflowsPage() {
@@ -16,9 +17,10 @@ export default function WorkflowsPage() {
     async (workflowId: string) => {
       try {
         await fetch(`/api/workflows/${workflowId}/run`, { method: "POST" });
+        toast.success("Workflow gestartet");
         refetch();
       } catch {
-        // Silent fail
+        toast.error("Workflow konnte nicht gestartet werden");
       }
     },
     [refetch]

@@ -32,6 +32,14 @@ export function AgentGrid() {
     );
   }
 
+  if (teams.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed border-border py-12 text-center text-sm text-muted-foreground">
+        Noch keine Agenten erstellt. Erstelle dein erstes Team und füge Agenten hinzu.
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {teams.map((team) => (

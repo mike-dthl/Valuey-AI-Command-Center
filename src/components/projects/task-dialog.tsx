@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
 import type { TaskCardData } from "./task-card";
 
 const taskSchema = z.object({
@@ -137,11 +138,12 @@ export function TaskDialog({
       }
 
       if (!res.ok) throw new Error("Failed to save task");
+      toast.success(isEdit ? "Task aktualisiert" : "Task erstellt");
       onOpenChange(false);
       reset();
       onSuccess?.();
     } catch {
-      // Stay open on error
+      toast.error("Task konnte nicht gespeichert werden");
     } finally {
       setSubmitting(false);
     }

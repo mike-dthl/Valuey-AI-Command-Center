@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 import type { Agent, Team } from "@/types/database";
 
 interface AgentConfigFormProps {
@@ -54,10 +55,11 @@ export function AgentConfigForm({ agent, teams, mode }: AgentConfigFormProps) {
       if (!res.ok) throw new Error("Failed to save agent");
 
       const data = await res.json();
+      toast.success(mode === "create" ? "Agent erstellt" : "Agent gespeichert");
       router.push(`/agents/${data.id}`);
       router.refresh();
     } catch {
-      // TODO: show error toast
+      toast.error("Agent konnte nicht gespeichert werden");
     } finally {
       setSaving(false);
     }

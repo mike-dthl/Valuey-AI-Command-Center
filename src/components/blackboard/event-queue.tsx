@@ -6,6 +6,7 @@ import { EventCard } from "./event-card";
 import { EventFilters } from "./event-filters";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { BlackboardEvent } from "@/types/database";
+import { toast } from "sonner";
 import type { EventFilterState } from "@/types/blackboard";
 
 type EventWithRelations = BlackboardEvent & {
@@ -41,7 +42,7 @@ export function EventQueue({ showFilters = true, limit = 50 }: EventQueueProps) 
         setEvents(data);
       }
     } catch {
-      // ignore
+      toast.error("Events konnten nicht geladen werden");
     } finally {
       setLoading(false);
     }
@@ -83,7 +84,7 @@ export function EventQueue({ showFilters = true, limit = 50 }: EventQueueProps) 
         );
       }
     } catch {
-      // ignore
+      toast.error("Status konnte nicht aktualisiert werden");
     }
   };
 

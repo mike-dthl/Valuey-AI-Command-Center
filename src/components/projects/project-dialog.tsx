@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
+import { toast } from "sonner";
 import type { Project } from "@/types/database";
 
 const projectSchema = z.object({
@@ -94,11 +95,12 @@ export function ProjectDialog({
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error("Failed to save project");
+      toast.success(isEdit ? "Projekt aktualisiert" : "Projekt erstellt");
       setOpen(false);
       reset();
       onSuccess?.();
     } catch {
-      // Stay open on error
+      toast.error("Projekt konnte nicht gespeichert werden");
     } finally {
       setSubmitting(false);
     }

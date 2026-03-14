@@ -19,6 +19,14 @@ const COLORS = [
 ];
 
 export function CostChart({ data }: CostChartProps) {
+  if (data.length === 0) {
+    return (
+      <div className="flex h-[280px] items-center justify-center text-sm text-muted-foreground">
+        Keine Kostendaten vorhanden
+      </div>
+    );
+  }
+
   return (
     <ResponsiveContainer width="100%" height={280}>
       <PieChart>
@@ -43,7 +51,7 @@ export function CostChart({ data }: CostChartProps) {
             borderRadius: "8px",
             fontSize: "12px",
           }}
-          formatter={(value) => [`€ ${Number(value).toFixed(4)}`, "Kosten"]}
+          formatter={(value) => [`€ ${Number(value).toFixed(2)}`, "Kosten"]}
         />
         <Legend
           wrapperStyle={{ fontSize: "11px", color: "#a1a1aa" }}

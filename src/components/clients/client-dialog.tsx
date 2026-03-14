@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
+import { toast } from "sonner";
 import type { Client } from "@/types/database";
 
 const clientSchema = z.object({
@@ -79,11 +80,12 @@ export function ClientDialog({ client, onSuccess, trigger }: ClientDialogProps) 
         body: JSON.stringify(data),
       });
       if (!res.ok) throw new Error("Failed to save client");
+      toast.success(isEdit ? "Client aktualisiert" : "Client erstellt");
       setOpen(false);
       reset();
       onSuccess?.();
     } catch {
-      // Error handling - stay open
+      toast.error("Client konnte nicht gespeichert werden");
     } finally {
       setSubmitting(false);
     }

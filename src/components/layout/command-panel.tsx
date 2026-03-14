@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 import {
   PanelRightClose,
   Plus,
@@ -38,6 +39,7 @@ function getTimeAgo(dateStr: string): string {
 }
 
 export function CommandPanel() {
+  const router = useRouter();
   const { commandPanelOpen, toggleCommandPanel } = useUIStore();
   const [events, setEvents] = useState<BlackboardEvent[]>([]);
 
@@ -151,13 +153,13 @@ export function CommandPanel() {
           Quick Actions
         </h3>
         <div className="space-y-2">
-          <Button variant="outline" size="sm" className="w-full justify-start gap-2">
+          <Button variant="outline" size="sm" className="w-full justify-start gap-2" onClick={() => router.push("/projects")}>
             <Plus className="h-3 w-3" /> Neuer Task
           </Button>
-          <Button variant="outline" size="sm" className="w-full justify-start gap-2">
+          <Button variant="outline" size="sm" className="w-full justify-start gap-2" onClick={() => router.push("/workflows")}>
             <Play className="h-3 w-3" /> Workflow starten
           </Button>
-          <Button variant="outline" size="sm" className="w-full justify-start gap-2">
+          <Button variant="outline" size="sm" className="w-full justify-start gap-2" onClick={() => router.push("/blackboard")}>
             <Plus className="h-3 w-3" /> Neues Event
           </Button>
         </div>

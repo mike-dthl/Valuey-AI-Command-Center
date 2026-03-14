@@ -13,6 +13,7 @@ import {
   Pencil,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import { useWorkflow } from "@/hooks/use-workflows";
 import { useAgents } from "@/hooks/use-agents";
 import { WorkflowEditor } from "@/components/workflows/workflow-editor";
@@ -43,9 +44,10 @@ export default function WorkflowDetailPage({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ steps: { nodes, edges } }),
         });
+        toast.success("Workflow gespeichert");
         refetch();
       } catch {
-        // Silent fail
+        toast.error("Speichern fehlgeschlagen");
       } finally {
         setSaving(false);
       }
@@ -56,9 +58,10 @@ export default function WorkflowDetailPage({
   const handleRun = useCallback(async () => {
     try {
       await fetch(`/api/workflows/${id}/run`, { method: "POST" });
+      toast.success("Workflow gestartet");
       refetch();
     } catch {
-      // Silent fail
+      toast.error("Workflow konnte nicht gestartet werden");
     }
   }, [id, refetch]);
 

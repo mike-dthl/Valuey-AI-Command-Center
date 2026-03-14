@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
+import { toast } from "sonner";
 import type { Workflow } from "@/types/database";
 
 const workflowSchema = z.object({
@@ -112,11 +113,12 @@ export function WorkflowDialog({
       });
       if (!res.ok) throw new Error("Failed to save");
       const result = await res.json();
+      toast.success(isEdit ? "Workflow aktualisiert" : "Workflow erstellt");
       setOpen(false);
       reset();
       onSuccess?.(result);
     } catch {
-      // Stay open
+      toast.error("Workflow konnte nicht gespeichert werden");
     } finally {
       setSubmitting(false);
     }
