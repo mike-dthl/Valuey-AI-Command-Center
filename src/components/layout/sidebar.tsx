@@ -14,6 +14,7 @@ import {
   FolderKanban,
   Workflow,
   BarChart3,
+  BookOpen,
   Settings,
   PanelLeftClose,
   PanelLeft,
@@ -28,6 +29,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   FolderKanban,
   Workflow,
   BarChart3,
+  BookOpen,
   Settings,
 };
 

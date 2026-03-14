@@ -8,6 +8,7 @@ export const NAV_ITEMS = [
   { label: "Projects", href: "/projects", icon: "FolderKanban" },
   { label: "Workflows", href: "/workflows", icon: "Workflow" },
   { label: "Analytics", href: "/analytics", icon: "BarChart3" },
+  { label: "Knowledge", href: "/knowledge", icon: "BookOpen" },
 ] as const;
 
 export const NAV_BOTTOM_ITEMS = [

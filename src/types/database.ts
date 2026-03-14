@@ -218,3 +218,66 @@ export interface WorkflowRun {
   completed_at: string | null;
   triggered_by: string | null;
 }
+
+// Phase A: Memory Layer
+export type MemoryCategory =
+  | "client_preference"
+  | "task_learning"
+  | "domain_knowledge"
+  | "workflow_insight"
+  | "error_pattern";
+
+export interface AgentMemory {
+  id: string;
+  agent_id: string;
+  category: MemoryCategory;
+  content: string;
+  source_conversation_id: string | null;
+  relevance_score: number;
+  access_count: number;
+  last_accessed_at: string | null;
+  created_at: string;
+}
+
+export type KnowledgeEntryType =
+  | "client_profile"
+  | "project_context"
+  | "industry_knowledge"
+  | "best_practice"
+  | "sop";
+
+export interface KnowledgeEntry {
+  id: string;
+  title: string;
+  content: string;
+  entry_type: KnowledgeEntryType;
+  tags: string[];
+  source_type: string | null;
+  source_id: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// Phase B: Feedback Loop
+export type FeedbackType = "quality" | "accuracy" | "relevance" | "tone" | "completeness";
+export type SignalType = "copied" | "regenerated" | "edited" | "used_in_task" | "conversation_continued" | "conversation_ended";
+
+export interface ConversationRating {
+  id: string;
+  conversation_id: string;
+  message_id: string | null;
+  rating: number;
+  feedback_type: FeedbackType | null;
+  comment: string | null;
+  rated_by: string | null;
+  created_at: string;
+}
+
+export interface OutputSignal {
+  id: string;
+  message_id: string;
+  signal_type: SignalType;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}

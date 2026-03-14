@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { streamAgentChat, calculateCost } from "@/lib/anthropic";
 import type { ChatMessageInput } from "@/lib/anthropic";
+import { getRelevantMemories, searchKnowledge, buildEnrichedPrompt } from "@/lib/context-engine";
 
 export async function POST(
   request: Request,
@@ -79,6 +80,13 @@ export async function POST(
     content: m.content,
   }));
 
+  // Context Injection — enrich system prompt with memories & knowledge
+  const [memories, knowledge] = await Promise.all([
+    getRelevantMemories(supabase, agentId),
+    searchKnowledge(supabase, message),
+  ]);
+  const enrichedPrompt = buildEnrichedPrompt(agent.system_prompt, memories, knowledge);
+
   // Stream response
   let assistantContent = "";
   let usageData: { inputTokens: number; outputTokens: number; cost: number } | null = null;
@@ -86,7 +94,7 @@ export async function POST(
   let stream;
   try {
     stream = await streamAgentChat({
-      systemPrompt: agent.system_prompt,
+      systemPrompt: enrichedPrompt,
       messages: chatMessages,
       model: agent.model,
       temperature: Number(agent.temperature),
@@ -163,6 +171,19 @@ export async function POST(
         .from("agents")
         .update({ status: "idle" })
         .eq("id", agentId);
+
+      // Async memory extraction — fire-and-forget, does not block response
+      if (convId && assistantContent) {
+        import("@/lib/context-engine").then(({ extractMemories }) => {
+          const allMessages = [
+            ...chatMessages,
+            { role: "assistant", content: assistantContent },
+          ];
+          extractMemories(supabase, agentId, convId!, allMessages).catch((err) =>
+            console.error("Memory extraction error:", err)
+          );
+        });
+      }
     },
   });
 

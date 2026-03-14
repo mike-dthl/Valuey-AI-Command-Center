@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Send, Square, Bot, User, Loader2 } from "lucide-react";
 import { ChatMessage } from "./chat-message";
+import { MessageRating } from "./message-rating";
 
 interface AgentChatProps {
   agentId: string;
@@ -15,7 +16,7 @@ interface AgentChatProps {
 }
 
 export function AgentChat({ agentId, agentName }: AgentChatProps) {
-  const { messages, isStreaming, sendMessage, stopStreaming, clearMessages } =
+  const { messages, isStreaming, conversationId, sendMessage, stopStreaming, clearMessages } =
     useChat(agentId);
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -76,14 +77,22 @@ export function AgentChat({ agentId, agentName }: AgentChatProps) {
                 )}
                 <div
                   className={cn(
-                    "max-w-[80%] rounded-lg px-4 py-2 text-sm",
+                    "group max-w-[80%] rounded-lg px-4 py-2 text-sm",
                     msg.role === "user"
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted"
                   )}
                 >
                   {msg.role === "assistant" ? (
-                    <ChatMessage content={msg.content} />
+                    <>
+                      <ChatMessage content={msg.content} />
+                      {!msg.isStreaming && msg.content && (
+                        <MessageRating
+                          messageContent={msg.content}
+                          conversationId={conversationId}
+                        />
+                      )}
+                    </>
                   ) : (
                     <div className="whitespace-pre-wrap">{msg.content}</div>
                   )}
