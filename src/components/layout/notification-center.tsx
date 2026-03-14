@@ -1,48 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { Bell, Check, X } from "lucide-react";
-
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: "info" | "success" | "warning" | "urgent";
-  read: boolean;
-  createdAt: string;
-}
-
-// Placeholder notifications
-const placeholderNotifications: Notification[] = [
-  {
-    id: "1",
-    title: "Agent 'Writer' hat Task abgeschlossen",
-    message: "Blog Draft: AI Trends 2026 ist fertig",
-    type: "success",
-    read: false,
-    createdAt: "vor 5 Min.",
-  },
-  {
-    id: "2",
-    title: "Neues Blackboard Event",
-    message: "deal_closed: Acme Corp — Website Redesign",
-    type: "urgent",
-    read: false,
-    createdAt: "vor 12 Min.",
-  },
-  {
-    id: "3",
-    title: "Workflow 'Content Pipeline' abgeschlossen",
-    message: "4/4 Steps erfolgreich",
-    type: "info",
-    read: true,
-    createdAt: "vor 1 Std.",
-  },
-];
+import { Bell, Check } from "lucide-react";
+import { useNotifications } from "@/hooks/use-notifications";
 
 const typeColors = {
   info: "bg-blue-500",
@@ -51,21 +14,26 @@ const typeColors = {
   urgent: "bg-red-500",
 };
 
+function timeAgo(dateStr: string): string {
+  const now = new Date();
+  const date = new Date(dateStr);
+  const diffMs = now.getTime() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+
+  if (diffMin < 1) return "gerade eben";
+  if (diffMin < 60) return `vor ${diffMin} Min.`;
+  const diffHrs = Math.floor(diffMin / 60);
+  if (diffHrs < 24) return `vor ${diffHrs} Std.`;
+  const diffDays = Math.floor(diffHrs / 24);
+  if (diffDays === 1) return "gestern";
+  return `vor ${diffDays} Tagen`;
+}
+
+import { useState } from "react";
+
 export function NotificationCenter() {
   const [open, setOpen] = useState(false);
-  const [notifications, setNotifications] = useState(placeholderNotifications);
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
-  const markAsRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
-  };
-
-  const markAllRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  };
+  const { notifications, unreadCount, loading, markAsRead, markAllRead } = useNotifications();
 
   return (
     <div className="relative">
@@ -77,7 +45,7 @@ export function NotificationCenter() {
       >
         <Bell className="h-4 w-4" />
         {unreadCount > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+          <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white animate-pulse">
             {unreadCount}
           </span>
         )}
@@ -103,7 +71,13 @@ export function NotificationCenter() {
             </div>
 
             <ScrollArea className="max-h-80">
-              {notifications.length === 0 ? (
+              {loading ? (
+                <div className="space-y-2 p-4">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-16 w-full" />
+                  ))}
+                </div>
+              ) : notifications.length === 0 ? (
                 <div className="p-8 text-center text-sm text-muted-foreground">
                   Keine Benachrichtigungen
                 </div>
@@ -127,11 +101,13 @@ export function NotificationCenter() {
                         <p className="text-sm font-medium leading-tight">
                           {notification.title}
                         </p>
-                        <p className="mt-0.5 text-xs text-muted-foreground truncate">
-                          {notification.message}
-                        </p>
+                        {notification.message && (
+                          <p className="mt-0.5 text-xs text-muted-foreground truncate">
+                            {notification.message}
+                          </p>
+                        )}
                         <p className="mt-1 text-[10px] text-muted-foreground">
-                          {notification.createdAt}
+                          {timeAgo(notification.created_at)}
                         </p>
                       </div>
                       {!notification.read && (
