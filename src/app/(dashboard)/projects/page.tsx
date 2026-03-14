@@ -1,49 +1,87 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+"use client";
 
-const columns = [
-  {
-    title: "Planning",
-    color: "text-blue-400",
-    tasks: [
-      { title: "Content-Strategie Q2", project: "Acme Corp", agent: "Planner", priority: "high" },
-    ],
-  },
-  {
-    title: "In Progress",
-    color: "text-amber-400",
-    tasks: [
-      { title: "Website Redesign", project: "Acme Corp", agent: "Developer", priority: "high" },
-      { title: "Blog Artikel", project: "Startup XYZ", agent: "Writer", priority: "medium" },
-      { title: "Lead-Analyse", project: "Tech Solutions", agent: "Qualifier", priority: "medium" },
-    ],
-  },
-  {
-    title: "Review",
-    color: "text-purple-400",
-    tasks: [
-      { title: "Social Media Kampagne", project: "DigiAg", agent: "Reviewer", priority: "low" },
-    ],
-  },
-  {
-    title: "Done",
-    color: "text-emerald-400",
-    tasks: [
-      { title: "Onboarding Dokumente", project: "Acme Corp", agent: "Client Communicator", priority: "medium" },
-      { title: "Rechnung Q1", project: "DigiAg", agent: "Finance Agent", priority: "low" },
-    ],
-  },
-];
-
-const priorityVariants: Record<string, "destructive" | "warning" | "secondary"> = {
-  high: "destructive",
-  medium: "warning",
-  low: "secondary",
-};
+import { useState, useCallback, useEffect } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { KanbanBoard } from "@/components/projects/kanban-board";
+import { ProjectDialog } from "@/components/projects/project-dialog";
+import { TaskDialog } from "@/components/projects/task-dialog";
+import { useProjects } from "@/hooks/use-projects";
+import { useTasks } from "@/hooks/use-tasks";
+import { useAgents } from "@/hooks/use-agents";
+import type { TaskCardData } from "@/components/projects/task-card";
+import type { TaskStatus } from "@/types/database";
 
 export default function ProjectsPage() {
+  const { projects, loading: projectsLoading, refetch: refetchProjects } = useProjects();
+  const { tasks, loading: tasksLoading, refetch: refetchTasks, updateTaskStatus } = useTasks();
+  const { agents } = useAgents();
+
+  const [taskDialogOpen, setTaskDialogOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<TaskCardData | null>(null);
+  const [defaultTaskStatus, setDefaultTaskStatus] = useState<string>("todo");
+
+  // Build task card data with project info
+  const [taskCards, setTaskCards] = useState<TaskCardData[]>([]);
+
+  useEffect(() => {
+    const cards: TaskCardData[] = tasks.map((t) => ({
+      id: t.id,
+      title: t.title,
+      description: t.description,
+      status: t.status,
+      priority: t.priority,
+      position: t.position,
+      due_date: t.due_date,
+      project_id: t.project_id,
+      project: t.project ?? projects.find((p) => p.id === t.project_id)
+        ? { id: t.project_id, name: projects.find((p) => p.id === t.project_id)?.name ?? "" }
+        : null,
+      assigned_agent: t.assigned_agent ?? null,
+    }));
+    setTaskCards(cards);
+  }, [tasks, projects]);
+
+  const handleTaskMove = useCallback(
+    (taskId: string, newStatus: TaskStatus, newPosition: number) => {
+      updateTaskStatus(taskId, newStatus, newPosition);
+    },
+    [updateTaskStatus]
+  );
+
+  const handleTaskClick = useCallback((task: TaskCardData) => {
+    setEditingTask(task);
+    setTaskDialogOpen(true);
+  }, []);
+
+  const handleAddTask = useCallback((status: TaskStatus) => {
+    setEditingTask(null);
+    setDefaultTaskStatus(status);
+    setTaskDialogOpen(true);
+  }, []);
+
+  const handleTaskSuccess = useCallback(() => {
+    refetchTasks();
+  }, [refetchTasks]);
+
+  const handleProjectSuccess = useCallback(() => {
+    refetchProjects();
+    refetchTasks();
+  }, [refetchProjects, refetchTasks]);
+
+  const projectList = projects.map((p) => ({ id: p.id, name: p.name }));
+  const clientList = projects
+    .filter((p) => p.client)
+    .map((p) => ({ id: p.client!.id, name: p.client!.name }))
+    .filter((c, i, arr) => arr.findIndex((x) => x.id === c.id) === i);
+
+  const agentList = agents.map((a) => ({
+    id: a.id,
+    name: a.name,
+    role: a.role,
+  }));
+
+  const loading = projectsLoading || tasksLoading;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -51,41 +89,40 @@ export default function ProjectsPage() {
           <h2 className="text-2xl font-bold">Projects</h2>
           <p className="text-sm text-muted-foreground">Kanban Board</p>
         </div>
-        <Button size="sm" className="gap-2">
-          <Plus className="h-4 w-4" /> Neues Projekt
-        </Button>
+        <ProjectDialog
+          clients={clientList}
+          onSuccess={handleProjectSuccess}
+        />
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-4">
-        {columns.map((column) => (
-          <div key={column.title} className="w-72 shrink-0">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className={`text-sm font-semibold ${column.color}`}>
-                {column.title}
-              </h3>
-              <Badge variant="secondary" className="text-[10px]">
-                {column.tasks.length}
-              </Badge>
-            </div>
-            <div className="space-y-3">
-              {column.tasks.map((task) => (
-                <Card key={task.title} className="cursor-pointer transition-all hover:border-primary/30">
-                  <CardContent className="p-3">
-                    <p className="text-sm font-medium">{task.title}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{task.project}</p>
-                    <div className="mt-2 flex items-center justify-between">
-                      <span className="text-[10px] text-muted-foreground">{task.agent}</span>
-                      <Badge variant={priorityVariants[task.priority]} className="text-[10px]">
-                        {task.priority}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+      {loading ? (
+        <div className="space-y-4">
+          <Skeleton className="h-10 w-64" />
+          <div className="flex gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-64 w-72 shrink-0" />
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      ) : (
+        <KanbanBoard
+          tasks={taskCards}
+          projects={projectList}
+          onTaskMove={handleTaskMove}
+          onTaskClick={handleTaskClick}
+          onAddTask={handleAddTask}
+        />
+      )}
+
+      <TaskDialog
+        open={taskDialogOpen}
+        onOpenChange={setTaskDialogOpen}
+        task={editingTask}
+        projects={projectList}
+        agents={agentList}
+        defaultStatus={defaultTaskStatus}
+        onSuccess={handleTaskSuccess}
+      />
     </div>
   );
 }

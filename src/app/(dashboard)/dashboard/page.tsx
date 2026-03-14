@@ -44,12 +44,48 @@ export default function DashboardPage() {
     agentCount: 0,
   });
 
+  // Fetch agent count from teams
   useEffect(() => {
     if (teams.length > 0) {
       const totalAgents = teams.reduce((sum, t) => sum + t.agents.length, 0);
       setKpis((prev) => ({ ...prev, agentCount: totalAgents }));
     }
   }, [teams]);
+
+  // Fetch client and project counts
+  useEffect(() => {
+    async function fetchCounts() {
+      try {
+        const [clientsRes, projectsRes] = await Promise.all([
+          fetch("/api/clients?status=active"),
+          fetch("/api/projects"),
+        ]);
+        if (clientsRes.ok) {
+          const clients = await clientsRes.json();
+          setKpis((prev) => ({ ...prev, activeClients: clients.length }));
+        }
+        if (projectsRes.ok) {
+          const projects = await projectsRes.json();
+          const active = projects.filter(
+            (p: { status: string }) => p.status === "active" || p.status === "planning"
+          );
+          const completed = projects.reduce(
+            (sum: number, p: { tasks?: { id: string }[] }) =>
+              sum + (p.tasks?.length ?? 0),
+            0
+          );
+          setKpis((prev) => ({
+            ...prev,
+            activeProjects: active.length,
+            tasksCompleted: completed,
+          }));
+        }
+      } catch {
+        // Silently fail for KPIs
+      }
+    }
+    fetchCounts();
+  }, []);
 
   return (
     <div className="space-y-6">
