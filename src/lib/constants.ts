@@ -55,3 +55,15 @@ export const KANBAN_COLUMNS = [
   { id: "review" as const, title: "Review", color: "text-purple-400" },
   { id: "done" as const, title: "Erledigt", color: "text-emerald-400" },
 ] as const;
+
+export const WORKFLOW_TRIGGER_TYPES = {
+  manual: { label: "Manuell", color: "text-blue-400", bg: "bg-blue-500/15", icon: "Play" },
+  scheduled: { label: "Geplant", color: "text-amber-400", bg: "bg-amber-500/15", icon: "Clock" },
+  event: { label: "Event", color: "text-purple-400", bg: "bg-purple-500/15", icon: "Zap" },
+} as const;
+
+export const WORKFLOW_RUN_STATUSES = {
+  running: { label: "Läuft", color: "text-amber-400", bg: "bg-amber-500/15" },
+  completed: { label: "Abgeschlossen", color: "text-emerald-400", bg: "bg-emerald-500/15" },
+  failed: { label: "Fehlgeschlagen", color: "text-red-400", bg: "bg-red-500/15" },
+} as const;

@@ -165,3 +165,30 @@ export interface UsageLog {
   model: string | null;
   created_at: string;
 }
+
+export type WorkflowTriggerType = "manual" | "scheduled" | "event";
+export type WorkflowRunStatus = "running" | "completed" | "failed";
+
+export interface Workflow {
+  id: string;
+  name: string;
+  description: string | null;
+  trigger_type: WorkflowTriggerType;
+  trigger_config: Record<string, unknown>;
+  steps: Record<string, unknown>;
+  is_active: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WorkflowRun {
+  id: string;
+  workflow_id: string;
+  status: WorkflowRunStatus;
+  steps_completed: number;
+  results: unknown[];
+  started_at: string;
+  completed_at: string | null;
+  triggered_by: string | null;
+}
