@@ -40,6 +40,10 @@ export function AgentConfigForm({ agent, teams, mode }: AgentConfigFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.team_id) {
+      toast.error("Bitte wähle ein Team aus");
+      return;
+    }
     setSaving(true);
 
     try {

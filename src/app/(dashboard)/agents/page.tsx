@@ -4,11 +4,12 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { AgentGrid } from "@/components/agents/agent-grid";
-import { useAgents } from "@/hooks/use-agents";
+import { useAgentsByTeam } from "@/hooks/use-agents";
 
 export default function AgentsPage() {
-  const { agents } = useAgents();
-  const busyCount = agents.filter((a) => a.status === "busy").length;
+  const { teams } = useAgentsByTeam();
+  const agentCount = teams.reduce((sum, t) => sum + t.agents.length, 0);
+  const busyCount = teams.reduce((sum, t) => sum + t.agents.filter((a) => a.status === "busy").length, 0);
 
   return (
     <div className="space-y-8">
@@ -16,7 +17,7 @@ export default function AgentsPage() {
         <div>
           <h2 className="text-2xl font-bold">Agent Teams</h2>
           <p className="text-sm text-muted-foreground">
-            4 Teams &middot; {agents.length} Agenten &middot; {busyCount} aktiv
+            {teams.length} Teams &middot; {agentCount} Agenten &middot; {busyCount} aktiv
           </p>
         </div>
         <Link href="/agents/new">
