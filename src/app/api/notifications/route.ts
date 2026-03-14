@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const limit = parseInt(request.nextUrl.searchParams.get("limit") ?? "20", 10);
+  const limit = Math.min(Math.max(1, parseInt(request.nextUrl.searchParams.get("limit") ?? "20", 10) || 20), 100);
   const unreadOnly = request.nextUrl.searchParams.get("unread") === "true";
 
   let query = supabase

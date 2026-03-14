@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   const priority = searchParams.get("priority");
   const status = searchParams.get("status");
   const teamId = searchParams.get("team_id");
-  const limit = parseInt(searchParams.get("limit") ?? "50");
+  const limit = Math.min(Math.max(1, parseInt(searchParams.get("limit") ?? "50") || 50), 100);
 
   let query = supabase
     .from("blackboard_events")
@@ -34,7 +34,9 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = await request.json();
+  let body;
+  try { body = await request.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
+
   const { data, error } = await supabase
     .from("blackboard_events")
     .insert(body)

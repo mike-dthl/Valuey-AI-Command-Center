@@ -14,8 +14,8 @@ export function useNotifications(limit = 20) {
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
       setNotifications(data);
-    } catch {
-      // Silent fail
+    } catch (err) {
+      console.error("Failed to fetch notifications:", err);
     } finally {
       setLoading(false);
     }

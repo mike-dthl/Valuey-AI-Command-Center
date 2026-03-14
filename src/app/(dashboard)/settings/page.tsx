@@ -67,15 +67,16 @@ export default function SettingsPage() {
           ) : (
             <>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Name</label>
+                <label htmlFor="profile-name" className="text-sm font-medium">Name</label>
                 <Input
+                  id="profile-name"
                   value={displayName}
                   onChange={(e) => setName(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Email</label>
-                <Input value={profile?.email ?? ""} disabled />
+                <label htmlFor="profile-email" className="text-sm font-medium">Email</label>
+                <Input id="profile-email" value={profile?.email ?? ""} disabled />
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -132,8 +133,9 @@ export default function SettingsPage() {
           ) : config ? (
             <>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Vault Pfad</label>
+                <label htmlFor="vault-path" className="text-sm font-medium">Vault Pfad</label>
                 <Input
+                  id="vault-path"
                   value={config.vault_path}
                   onChange={(e) => updateConfig({ vault_path: e.target.value })}
                   placeholder="/Users/du/Obsidian/MeinVault"
@@ -141,8 +143,9 @@ export default function SettingsPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Knowledge Pfad</label>
+                <label htmlFor="knowledge-path" className="text-sm font-medium">Knowledge Pfad</label>
                 <Input
+                  id="knowledge-path"
                   value={config.knowledge_path}
                   onChange={(e) => updateConfig({ knowledge_path: e.target.value })}
                   placeholder="Knowledge"

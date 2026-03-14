@@ -16,6 +16,7 @@ import { Search, LogOut, User, Settings } from "lucide-react";
 import { NAV_ITEMS } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { useUIStore } from "@/stores/ui-store";
 
 export function Header() {
   const pathname = usePathname();
@@ -34,9 +35,9 @@ export function Header() {
     router.refresh();
   };
 
+  const setCommandPanelOpen = useUIStore((s) => s.setCommandPanelOpen);
   const handleOpenCommandPalette = () => {
-    // Dispatch custom event to open command palette
-    window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }));
+    setCommandPanelOpen(true);
   };
 
   return (

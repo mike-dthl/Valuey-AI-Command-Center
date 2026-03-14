@@ -29,7 +29,9 @@ export async function PATCH(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = await request.json();
+  let body;
+  try { body = await request.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
+
   const { data, error } = await supabase
     .from("workflows")
     .update({ ...body, updated_at: new Date().toISOString() })

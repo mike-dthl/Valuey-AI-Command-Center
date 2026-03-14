@@ -12,7 +12,9 @@ export async function POST(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = await request.json();
+  let body;
+  try { body = await request.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
+
   const { message, conversation_id } = body as {
     message: string;
     conversation_id?: string;
@@ -81,16 +83,26 @@ export async function POST(
   let assistantContent = "";
   let usageData: { inputTokens: number; outputTokens: number; cost: number } | null = null;
 
-  const stream = await streamAgentChat({
-    systemPrompt: agent.system_prompt,
-    messages: chatMessages,
-    model: agent.model,
-    temperature: Number(agent.temperature),
-    maxTokens: agent.max_tokens,
-    onUsage(usage) {
-      usageData = usage;
-    },
-  });
+  let stream;
+  try {
+    stream = await streamAgentChat({
+      systemPrompt: agent.system_prompt,
+      messages: chatMessages,
+      model: agent.model,
+      temperature: Number(agent.temperature),
+      maxTokens: agent.max_tokens,
+      onUsage(usage) {
+        usageData = usage;
+      },
+    });
+  } catch (err) {
+    // Reset agent status on error — prevent stuck "busy" state
+    await supabase.from("agents").update({ status: "idle" }).eq("id", agentId);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Chat failed" },
+      { status: 500 }
+    );
+  }
 
   // Create a transform stream that captures content for DB storage
   const transformStream = new TransformStream<Uint8Array, Uint8Array>({

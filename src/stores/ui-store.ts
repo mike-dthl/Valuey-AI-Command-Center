@@ -11,7 +11,7 @@ interface UIState {
 
 export const useUIStore = create<UIState>((set) => ({
   sidebarCollapsed: false,
-  commandPanelOpen: true,
+  commandPanelOpen: false,
   toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
   setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
   toggleCommandPanel: () => set((state) => ({ commandPanelOpen: !state.commandPanelOpen })),
